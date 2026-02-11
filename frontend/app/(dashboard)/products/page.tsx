@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { productService } from "@/services/productService"
 import { categoryService } from "@/services/categoryService"
@@ -45,7 +45,7 @@ import {
 
 
 
-// Define ProductFormData type for better type safety
+
 type ProductFormData = z.infer<typeof productSchema>
 
 const productSchema = z.object({
@@ -63,12 +63,11 @@ export default function ProductsPage() {
     const [page, setPage] = useState(1)
     const [search, setSearch] = useState("")
     const [statusFilter, setStatusFilter] = useState("")
-    const [categoryFilter, setCategoryFilter] = useState("ALL") // "ALL" or categoryId
+    const [categoryFilter, setCategoryFilter] = useState("ALL")
     const [isCreateOpen, setIsCreateOpen] = useState(false)
     const [editingProduct, setEditingProduct] = useState<any>(null)
     const [sorting, setSorting] = useState({ column: "createdAt", direction: "desc" })
 
-    // 1. Debounce Search
     const debouncedSearch = useDebounce(search, 500)
 
     const { user } = useAuth()
@@ -76,7 +75,6 @@ export default function ProductsPage() {
     const fileInputRef = useRef<HTMLInputElement>(null)
     const isAdmin = user?.role === 'ADMIN'
 
-    // Fetch Categories
     const { data: categories } = useQuery({
         queryKey: ["categories"],
         queryFn: async () => {
@@ -98,23 +96,8 @@ export default function ProductsPage() {
         }),
     })
 
-    // NOTE: The backend getProducts filters by 'category' name currently. 
-    // If we switch to filtering by ID, we need to update backend or send name here appropriately.
-    // For now, let's assume we want to support the new ID-based relation. 
-    // However, if we filter by ID, we should check if backend supports it.
-    // Backend `productController` `where.category` checks for equality. 
-    // Optimally, we should update backend to filter by `categoryId`. 
-    // But for now, if we pass ID, it won't match the 'category' string column until migration is fully done.
-    // Wait, the Product model has both `category` string and `Category` relation.
-    // When creating, we save both.
-
     const createMutation = useMutation({
         mutationFn: (data: ProductFormData) => {
-            // Map categoryId to category name for legacy support if needed, or backend handles it?
-            // Backend `createProduct` logic: `category: data.category || ""`
-            // We should find the category name from ID to send valid data if strictly required,
-            // OR backend handles looking up name from ID.
-            // Let's rely on backend `createProduct` update which handles `categoryId`.
             return productService.createProduct(data)
         },
         onSuccess: () => {
@@ -181,7 +164,7 @@ export default function ProductsPage() {
         const csv = Papa.unparse(data.data.data.map((p: any) => ({
             name: p.name,
             sku: p.sku,
-            category: p.category, // Legacy string
+            category: p.category,
             price: p.price,
             quantity: p.quantity,
             minStock: p.minStock
@@ -208,9 +191,7 @@ export default function ProductsPage() {
                 const products = results.data.map((row: any) => ({
                     name: row.name,
                     sku: row.sku,
-                    category: row.category, // This will be string, backend might need adjustment to find ID or creates new category?
-                    // For now, strictly expecting existing categories might be too harsh for import. 
-                    // Let's assume backend handles string->category logic or we treat it as legacy string.
+                    category: row.category,
                     price: Number(row.price),
                     quantity: Number(row.quantity),
                     minStock: Number(row.minStock || 10)
@@ -272,7 +253,7 @@ export default function ProductsPage() {
                     <SelectContent>
                         <SelectItem value="ALL">All Categories</SelectItem>
                         {categories?.map((cat: any) => (
-                            <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem> // Filtering by name for now as backend expects string
+                            <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
@@ -421,7 +402,7 @@ export default function ProductsPage() {
                     defaultValues={{
                         ...editingProduct,
                         categoryId: editingProduct.categoryId || "",
-                        // category: editingProduct.Category?.name || editingProduct.category, // We only need categoryId for form
+
                         price: editingProduct.price,
                         costPrice: editingProduct.costPrice || 0,
                         quantity: editingProduct.quantity,
@@ -443,7 +424,7 @@ interface ProductDialogProps {
     defaultValues?: Partial<ProductFormData>
     title: string
     description: string
-    categories?: any[] // Make optional to handle loading state
+    categories?: any[]
 }
 
 function ProductDialog({ open, onOpenChange, onSubmit, defaultValues, title, description, categories }: ProductDialogProps) {
@@ -457,22 +438,11 @@ function ProductDialog({ open, onOpenChange, onSubmit, defaultValues, title, des
             costPrice: defaultValues?.costPrice || 0,
             quantity: defaultValues?.quantity || 0,
             minStock: defaultValues?.minStock || 10,
-            note: "" // Always empty default for note
+            note: ""
         },
     })
 
-    // Reset form when defaultValues or open changes.
-    // This solves the issue of cached defaultValues when opening the dialog for different products
-    // or switching between create/edit modes if the component was reused efficiently by React.
-    // Although conditional rendering {!!editingProduct && ...} usually remounts,
-    // explicit reset is safer for the 'isCreateOpen' dialog if it stays mounted.
-    // For 'editingProduct' dialog, since it's conditionally rendered on `editingProduct`, it remounts.
-    // But for 'isCreateOpen', it is always mounted but hidden? No, Dialog mounts its content? 
-    // Shadcn Dialog content might stay mounted.
 
-    // Actually, `isCreateOpen` dialog uses `defaultValues` which are empty strings.
-    // When `open` changes to true, we might want to ensure it's reset.
-    /*
     useEffect(() => {
         if (open) {
             form.reset(defaultValues || {
@@ -480,13 +450,13 @@ function ProductDialog({ open, onOpenChange, onSubmit, defaultValues, title, des
             })
         }
     }, [open, defaultValues, form])
-    */
+
 
     const onError = (errors: any) => {
         console.error("Form validation errors:", JSON.stringify(errors, null, 2))
         toast.error("Please check the form for errors")
 
-        // Detailed error toast
+
         const errorMessages = Object.entries(errors).map(([key, value]: [string, any]) => `${key}: ${value.message}`).join(", ")
         if (errorMessages) {
             toast.error(errorMessages)

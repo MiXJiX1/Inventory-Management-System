@@ -7,7 +7,7 @@ const expenseSchema = z.object({
     description: z.string().min(1),
     amount: z.coerce.number().min(0),
     type: z.string().optional(),
-    date: z.string().datetime().optional(), // ISO String
+    date: z.string().datetime().optional(),
 });
 
 export const getExpenses = async (req: Request, res: Response) => {
@@ -15,7 +15,6 @@ export const getExpenses = async (req: Request, res: Response) => {
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
 
-        // Optional date filtering logic similar to dashboard
         const { startDate, endDate } = req.query;
 
         const where: any = {};

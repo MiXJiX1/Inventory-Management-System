@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input"
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, format } from "date-fns"
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-// Helper to get date params
 const getDateRange = (range: string, customStart?: string, customEnd?: string) => {
     const now = new Date()
     let start = now
@@ -24,7 +23,7 @@ const getDateRange = (range: string, customStart?: string, customEnd?: string) =
             end = endOfDay(now)
             break
         case "WEEK":
-            start = startOfWeek(now, { weekStartsOn: 1 }) // Monday start
+            start = startOfWeek(now, { weekStartsOn: 1 })
             end = endOfDay(now)
             break
         case "MONTH":
@@ -60,7 +59,7 @@ export default function ProfitLossPage() {
     const [customEnd, setCustomEnd] = useState("")
     const [categoryFilter, setCategoryFilter] = useState("ALL")
 
-    // Fetch Categories
+
     const { data: categories } = useQuery({
         queryKey: ["categories"],
         queryFn: async () => {
@@ -69,7 +68,7 @@ export default function ProfitLossPage() {
         }
     })
 
-    // Calculate dates
+
     const { startDate, endDate } = useMemo(() =>
         getDateRange(dateFilter, customStart, customEnd),
         [dateFilter, customStart, customEnd]
@@ -309,7 +308,7 @@ export default function ProfitLossPage() {
                                         tickFormatter={(value) => `฿${value}`}
                                     />
                                     <Tooltip
-                                        formatter={(value: number) => [`฿${value.toLocaleString()}`, ""]}
+                                        formatter={(value: any) => [`฿${value.toLocaleString()}`, ""]}
                                         labelFormatter={(label) => format(new Date(label), 'MMM dd, yyyy')}
                                     />
                                     <Legend />
@@ -345,7 +344,7 @@ export default function ProfitLossPage() {
                                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                         ))}
                                     </Pie>
-                                    <Tooltip formatter={(value: number) => `฿${value.toLocaleString()}`} />
+                                    <Tooltip formatter={(value: any) => `฿${value.toLocaleString()}`} />
                                 </PieChart>
                             </ResponsiveContainer>
                         </div>
@@ -383,7 +382,7 @@ export default function ProfitLossPage() {
                                     />
                                     <Tooltip
                                         cursor={{ fill: 'transparent' }}
-                                        formatter={(value: number) => [`฿${value.toLocaleString()}`, "Net Profit"]}
+                                        formatter={(value: any) => [`฿${value.toLocaleString()}`, "Net Profit"]}
                                         labelFormatter={(label) => format(new Date(label), 'MMM dd, yyyy')}
                                     />
                                     <Bar dataKey="profit" name="Net Profit" fill="#3b82f6" radius={[4, 4, 0, 0]}>
@@ -421,7 +420,7 @@ export default function ProfitLossPage() {
                                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                             ))}
                                         </Pie>
-                                        <Tooltip formatter={(value: number) => `฿${value.toLocaleString()}`} />
+                                        <Tooltip formatter={(value: any) => `฿${value.toLocaleString()}`} />
                                     </PieChart>
                                 </ResponsiveContainer>
                             ) : (

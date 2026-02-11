@@ -35,7 +35,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(res.data);
         } catch (error) {
             setUser(null);
-            // Optional: Redirect to login if sensitive routes are accessed
         } finally {
             setIsLoading(false);
         }
@@ -53,7 +52,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         router.push("/login");
     };
 
-    // Inactivity Check
     useEffect(() => {
         const events = ["mousedown", "keydown", "scroll", "touchstart"];
 
@@ -67,17 +65,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 const now = Date.now();
                 const timeSinceLastActive = now - parseInt(lastActive);
 
-                // 10 minutes = 600,000 ms
                 if (timeSinceLastActive > 10 * 60 * 1000 && user) {
-                    logout(); // Auto logout
+                    logout();
                 }
             }
         };
 
-        // Check on mount and interval
-        const interval = setInterval(checkInactivity, 60 * 1000); // Check every minute
+        const interval = setInterval(checkInactivity, 60 * 1000);
 
-        // Add event listeners
         events.forEach(event => window.addEventListener(event, resetTimer));
 
         // Initial set

@@ -66,7 +66,6 @@ export const deleteCategory = async (req: Request, res: Response) => {
         const { id } = req.params;
         const categoryId = id as string;
 
-        // Check availability
         const category = await prisma.category.findUnique({
             where: { id: categoryId },
             include: {

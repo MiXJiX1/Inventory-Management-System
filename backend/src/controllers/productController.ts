@@ -6,8 +6,8 @@ import { logAction } from "../services/auditService";
 const productSchema = z.object({
     name: z.string().min(1),
     sku: z.string().min(1),
-    category: z.string().optional(), // Keep optional for backward compatibility or direct string
-    categoryId: z.string().optional(), // New relation
+    category: z.string().optional(),
+    categoryId: z.string().optional(),
     image: z.string().optional(),
     price: z.coerce.number().min(0),
     costPrice: z.coerce.number().min(0).optional(),
@@ -51,7 +51,7 @@ export const getProducts = async (req: Request, res: Response) => {
             skip: (page - 1) * limit,
             take: limit,
             orderBy: { [sortBy]: sortOrder },
-            include: { Category: true } // Include category details
+            include: { Category: true }
         });
 
         const productsWithStatus = products.map((p: any) => {
@@ -92,14 +92,12 @@ export const createProduct = async (req: Request, res: Response) => {
         const existingSku = await prisma.product.findUnique({ where: { sku: data.sku } });
         if (existingSku) return res.status(400).json({ message: "SKU already exists" });
 
-        // Logic to handle category: If categoryId provided, use it. If category name provided, try to find or create?
-        // For now, let's assume frontend sends categoryId. If legacy 'category' string is sent, we might want to map it.
-        // Simple approach: Save both if possible, or prioritize categoryId.
+
 
         const product = await prisma.product.create({
             data: {
                 ...data,
-                category: data.category || "", // Fallback
+                category: data.category || "",
             }
         });
         await logAction((req as any).user?.userId, "CREATE", "PRODUCT", product.id, { name: product.name, sku: product.sku });
@@ -116,34 +114,29 @@ export const createProductsBatch = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "Invalid products array" });
         }
 
-        // Validate each product
+
         const validProducts = [];
         const errors = [];
 
         for (const p of products) {
             try {
                 const data = productSchema.parse(p);
-                // Check dupes logic could be here, or use skipDuplicates in createMany (but createMany doesn't return created records in all DBs/Prisma versions same way)
-                // For simplicity/safety, we'll try to insert valid ones.
-                // However, Prisma createMany doesn't support 'ON CONFLICT DO UPDATE' easily without raw query.
-                // We will use check-then-create loop for better error report or just createMany with skipDuplicates if ID provided (but we use UUIDs)
 
-                // Let's use createMany and hope for best? No, user wants feedback. 
-                // Let's filter out existing SKUs first.
+
 
                 const existing = await prisma.product.findUnique({ where: { sku: data.sku } });
                 if (!existing) {
                     validProducts.push(data);
                 }
             } catch (e) {
-                // skip invalid
+
             }
         }
 
         if (validProducts.length > 0) {
             await prisma.product.createMany({
                 data: validProducts,
-                skipDuplicates: true // In case of race condition
+                skipDuplicates: true
             });
             await logAction((req as any).user?.userId, "BATCH_CREATE", "PRODUCT", undefined, { count: validProducts.length });
         }
@@ -161,18 +154,16 @@ export const updateProduct = async (req: Request, res: Response) => {
         const data = productSchema.partial().parse(req.body);
         console.log("updateProduct parsed data:", data);
 
-        // Check if SKU is being updated and conflicts
+
         if (data.sku) {
             const existing = await prisma.product.findFirst({ where: { sku: data.sku, NOT: { id: id as string } } });
             if (existing) return res.status(400).json({ message: "SKU already exists" });
         }
 
-        // Variable to hold product name for logging
         let productName = "";
 
-        let currentProduct: any = null; // Lifted scope for audit log
+        let currentProduct: any = null;
 
-        // Transaction Logic
         const result = await prisma.$transaction(async (prisma) => {
             currentProduct = await prisma.product.findUnique({ where: { id: id as string } });
             if (!currentProduct) throw new Error("Product not found");
@@ -184,7 +175,7 @@ export const updateProduct = async (req: Request, res: Response) => {
 
             if (data.quantity !== undefined && data.quantity !== currentProduct.quantity) {
                 const diff = data.quantity - currentProduct.quantity;
-                const reason = req.body.reason || "MANUAL"; // Frontend can send "SALE", "RESTOCK", "ADJUST"
+                const reason = req.body.reason || "MANUAL";
 
                 if (diff > 0) {
                     transactionType = "IN";
@@ -194,7 +185,7 @@ export const updateProduct = async (req: Request, res: Response) => {
                     if (reason === "ADJUST") {
                         transactionType = "ADJUST";
                     } else {
-                        transactionType = "OUT"; // Default to OUT (Sale) for now, or we can make "ADJUST" default for manual edits
+                        transactionType = "OUT";
                     }
                 }
             }
@@ -216,7 +207,6 @@ export const updateProduct = async (req: Request, res: Response) => {
             return updatedProduct;
         });
 
-        // Calculate actual changes
         const changes: Record<string, { old: any, new: any }> = {};
         if (currentProduct) {
             const keys = Object.keys(data) as Array<keyof typeof data>;
@@ -224,9 +214,6 @@ export const updateProduct = async (req: Request, res: Response) => {
                 const newValue = data[key];
                 const oldValue = currentProduct[key as keyof typeof currentProduct];
 
-                // Simple equality check (strict)
-                // Handle standard types. For objects/dates, might need better check, 
-                // but Product model is mostly primitives.
                 if (newValue !== undefined && newValue !== oldValue) {
                     changes[key] = { old: oldValue, new: newValue };
                 }
@@ -235,7 +222,7 @@ export const updateProduct = async (req: Request, res: Response) => {
 
         await logAction((req as any).user?.userId, "UPDATE", "PRODUCT", id as string, {
             productName: productName,
-            updates: changes, // Now contains { old, new } objects
+            updates: changes,
             note: req.body.note
         });
 
@@ -248,7 +235,7 @@ export const updateProduct = async (req: Request, res: Response) => {
 export const deleteProduct = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const productId = Array.isArray(id) ? id[0] : id; // Handle potential array
+        const productId = Array.isArray(id) ? id[0] : id;
 
         const product = await prisma.product.findUnique({ where: { id: productId } });
         if (!product) return res.status(404).json({ message: "Product not found" });

@@ -25,6 +25,5 @@ export const logAction = async (
         });
     } catch (error) {
         console.error("Failed to create audit log:", error);
-        // Don't throw error to avoid blocking the main action
     }
 };

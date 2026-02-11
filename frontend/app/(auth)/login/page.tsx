@@ -42,7 +42,6 @@ export default function LoginPage() {
         try {
             await login(values)
             toast.success("Login successful")
-            // router.push("/dashboard") // Handled in AuthProvider
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Login failed")
         }

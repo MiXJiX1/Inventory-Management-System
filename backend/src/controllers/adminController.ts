@@ -12,7 +12,6 @@ export const clearAllData = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "Password is required" });
         }
 
-        // Verify Admin Password
         const user = await prisma.user.findUnique({ where: { id: userId } });
         if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -21,16 +20,13 @@ export const clearAllData = async (req: Request, res: Response) => {
             return res.status(401).json({ message: "Invalid password" });
         }
 
-        // Execute Deletion Transaction
-        // Delete dependent data first
         await prisma.$transaction([
             prisma.transaction.deleteMany({}),
             prisma.product.deleteMany({}),
             prisma.category.deleteMany({}),
-            prisma.auditLog.deleteMany({}), // Clear logs too as requested "Delete All Data"
+            prisma.auditLog.deleteMany({}),
         ]);
 
-        // Log this action (but we just deleted logs? So this will be the first new log)
         await logAction(userId, "DELETE", "SYSTEM", "ALL", { message: "All data cleared by admin" });
 
         res.json({ message: "All data cleared successfully" });

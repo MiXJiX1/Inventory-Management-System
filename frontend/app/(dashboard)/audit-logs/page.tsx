@@ -26,7 +26,6 @@ export default function AuditLogsPage() {
         enabled: user?.role === "ADMIN"
     })
 
-    // Debounce search (simplified)
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearch(e.target.value)
         setPage(1)
@@ -43,7 +42,6 @@ export default function AuditLogsPage() {
         try {
             const details = JSON.parse(detailsStr);
 
-            // Handle Product Update format
             if (details.productName && details.updates) {
                 const keys = Object.keys(details.updates);
                 const fields = keys.join(", ");
@@ -65,7 +63,6 @@ export default function AuditLogsPage() {
                     )
                 }
 
-                // Full Details View
                 return (
                     <div className="flex flex-col gap-2">
                         <div className="text-sm">
@@ -75,7 +72,6 @@ export default function AuditLogsPage() {
                                     <div className="text-muted-foreground mb-1">Changes:</div>
                                     <ul className="space-y-1 ml-1">
                                         {Object.entries(details.updates).map(([key, val]: [string, any]) => {
-                                            // Check if it's the new diff format { old, new }
                                             if (val && typeof val === 'object' && 'old' in val && 'new' in val) {
                                                 return (
                                                     <li key={key} className="flex gap-2 items-center bg-muted/50 p-1 rounded px-2">
@@ -87,7 +83,6 @@ export default function AuditLogsPage() {
                                                     </li>
                                                 )
                                             }
-                                            // Fallback for legacy format (just value)
                                             return (
                                                 <li key={key}>
                                                     <span className="font-medium">{key}:</span> {String(val)}
@@ -110,13 +105,11 @@ export default function AuditLogsPage() {
                 );
             }
 
-            // Handle summary for table (Truncated)
             if (truncate) {
                 if (details.updates) return <span className="truncate block max-w-[200px]">{JSON.stringify(details.updates)}</span>;
                 return <span className="truncate block max-w-[200px]">{JSON.stringify(details)}</span>;
             }
 
-            // Handle legacy updates or other formats (Full View)
             if (details.updates) {
                 return (
                     <pre className="bg-muted p-2 rounded-md overflow-auto text-xs">
@@ -125,14 +118,13 @@ export default function AuditLogsPage() {
                 );
             }
 
-            // Handle manual string or other JSON
             return (
                 <pre className="bg-muted p-2 rounded-md overflow-auto text-xs">
                     {JSON.stringify(details, null, 2)}
                 </pre>
             );
         } catch (e) {
-            return detailsStr; // Not JSON
+            return detailsStr;
         }
     };
 

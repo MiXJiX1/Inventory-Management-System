@@ -37,9 +37,7 @@ export function ClearDataDialog({ open, onOpenChange }: ClearDataDialogProps) {
             onOpenChange(false)
             setConfirmText("")
             setPassword("")
-            // Invalidate all queries to refresh UI
             queryClient.invalidateQueries()
-            // Optionally redirect or reload if needed, but invalidation should clear lists
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to clear data")
         } finally {

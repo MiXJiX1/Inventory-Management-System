@@ -1,6 +1,6 @@
 # Inventory Management System
 
-A professional Full Stack Inventory Management System built with modern web technologies.
+A professional, full-featured Inventory Management System built with modern web technologies, designed to streamline stock tracking, financial reporting, and operational security.
 
 ## 🚀 Tech Stack
 
@@ -8,8 +8,10 @@ A professional Full Stack Inventory Management System built with modern web tech
 -   **Framework**: Next.js 14+ (App Router)
 -   **Language**: TypeScript
 -   **Styling**: TailwindCSS + shadcn/ui
+-   **Icons**: Lucide React
 -   **State Management**: TanStack Query (React Query)
 -   **Forms**: React Hook Form + Zod
+-   **Charts**: Recharts
 -   **HTTP Client**: Axios
 
 ### Backend
@@ -17,25 +19,44 @@ A professional Full Stack Inventory Management System built with modern web tech
 -   **Framework**: Express.js
 -   **Language**: TypeScript
 -   **Database ORM**: Prisma
--   **Database**: PostgreSQL
+-   **Database**: PostgreSQL (Supabase compatible)
 -   **Authentication**: JWT (Access + Refresh Tokens) + HttpOnly Cookies
 -   **Validation**: Zod
 
-## ✨ Features
+## ✨ Key Features
 
--   **Authentication**: Secure Register/Login flow with automatic token refreshing.
--   **Dashboard**: Real-time overview of total stock, low stock items, and more.
--   **Product Management**:
-    -   Create, Read, Update, Delete (CRUD) products.
-    -   Pagination, Search, and Filtering.
-    -   Status tracking (In Stock, Low Stock, Out of Stock).
--   **Responsive Design**: text-based mobile friendly UI.
+### 📦 Inventory & Product Management
+-   **Complete CRUD**: Create, read, update, and delete products with ease.
+-   **Stock Tracking**: Real-time tracking of stock levels with status indicators (In Stock, Low Stock, Out of Stock).
+-   **Low Stock Alerts**: Visual badges and filters to quickly identify items below minimum stock levels.
+-   **Import/Export**: Bulk import and export products via CSV.
+-   **Categories**: Organize products into manageable categories.
+-   **Stock Movements**: Track refined movements including **IN** (Purchase), **OUT** (Sale), and **ADJUST** (Manual Correction).
+
+### 💰 Financials & Reporting
+-   **Profit & Loss Report**: Dedicated section for financial health analysis.
+-   **Visual Analytics**: Interactive charts for Sales Trends (Line), Net Profit (Bar), and Expense/Revenue Breakdown (Pie).
+-   **Metrics**: Track Revenue, Cost of Goods Sold (COGS), Expenses, and Net Profit.
+-   **Currency**: Optimized for Thai Baht (฿).
+-   **Filtering**: Analyze financial data by custom date ranges and categories.
+
+### 🔐 Security & Access Control
+-   **Role-Based Access Control (RBAC)**: Distinguish between **Admin** (full access) and **Staff** (restricted access) roles.
+-   **Secure Authentication**: Robust JWT implementation with automatic token refreshing and HttpOnly cookies.
+-   **Auto-Logout**: Security feature that automatically logs out users after 10 minutes of inactivity.
+-   **Audit Logs**: Comprehensive, searchable logs of all critical actions (Login, Create, Update, Delete) for accountability.
+
+### 🎨 User Experience (UX)
+-   **Mobile Responsiveness**: Fully responsive tailored for desktop and mobile usage.
+-   **Modern UI**: Clean interface using `shadcn/ui` components with smooth animations.
+-   **Smart Interactions**: Debounced search, skeleton loading states, and toast notifications (Success/Error).
+-   **Confirmation Dialogs**: Safety checks for critical actions like deletion.
 
 ## 🛠️ Setup Instructions
 
 ### Prerequisites
 -   Node.js (v18+)
--   PostgreSQL Database
+-   PostgreSQL Database (Local or Supabase)
 
 ### 1. Clone the repository
 ```bash
@@ -51,14 +72,18 @@ npm install
 -   Create a `.env` file in `backend/`:
     ```env
     DATABASE_URL="postgresql://user:password@localhost:5432/inventory_db?schema=public"
-    JWT_SECRET="your_jwt_secret"
-    JWT_REFRESH_SECRET="your_refresh_secret"
+    JWT_SECRET="your_super_secret_jwt_key"
+    JWT_REFRESH_SECRET="your_super_secret_refresh_key"
     FRONTEND_URL="http://localhost:3000"
     PORT=4000
     ```
 -   Run migrations:
     ```bash
     npx prisma migrate dev --name init
+    ```
+-   Seed initial data (optional but recommended):
+    ```bash
+    npx ts-node prisma/seed.ts
     ```
 -   Start server:
     ```bash
@@ -81,24 +106,27 @@ npm install
 
 ### 4. Access the App
 Open `http://localhost:3000` in your browser.
+-   **Default Admin Credentials** (if seeded):
+    -   Email: `admin@example.com`
+    -   Password: `password123`
 
 ## 📂 Project Structure
 
 ```
 ├── backend/
 │   ├── src/
-│   │   ├── controllers/  # Request handlers
-│   │   ├── middlewares/  # Auth & Validation
-│   │   ├── routes/       # API Routes
-│   │   ├── services/     # Business logic
-│   │   └── utils/        # Helpers
-│   └── prisma/           # DB Schema
+│   │   ├── controllers/  # Logic for handling requests
+│   │   ├── middlewares/  # Authentication & Validation guards
+│   │   ├── routes/       # API Route definitions
+│   │   ├── services/     # Business logic layer
+│   │   └── utils/        # Helper functions & constants
+│   └── prisma/           # Database Schema & Seeds
 │
 └── frontend/
-    ├── app/              # Next.js Pages
+    ├── app/              # Next.js App Router Pages
     ├── components/
-    │   ├── ui/           # Shadcn Components
-    │   └── layout/       # Sidebar, Header
-    ├── lib/              # Utils & API client
-    └── services/         # API calls
+    │   ├── ui/           # Reusable shadcn/ui components
+    │   └── layout/       # App shell (Sidebar, Header)
+    ├── lib/              # Utilities & Axios client
+    └── hooks/            # Custom React hooks (e.g., use-debounce)
 ```

@@ -18,6 +18,7 @@ import {
     DialogTrigger,
     DialogFooter
 } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -55,6 +56,7 @@ const productSchema = z.object({
     costPrice: z.coerce.number().min(0, "Cost Price must be positive").default(0),
     quantity: z.coerce.number().int().min(0, "Quantity must be positive"),
     minStock: z.coerce.number().int().min(0).default(10),
+    note: z.string().optional(),
 })
 
 export default function ProductsPage() {
@@ -454,7 +456,8 @@ function ProductDialog({ open, onOpenChange, onSubmit, defaultValues, title, des
             price: defaultValues?.price || 0,
             costPrice: defaultValues?.costPrice || 0,
             quantity: defaultValues?.quantity || 0,
-            minStock: defaultValues?.minStock || 10
+            minStock: defaultValues?.minStock || 10,
+            note: "" // Always empty default for note
         },
     })
 
@@ -606,7 +609,23 @@ function ProductDialog({ open, onOpenChange, onSubmit, defaultValues, title, des
                                     </FormItem>
                                 )}
                             />
+
                         </div>
+
+                        <FormField
+                            control={form.control}
+                            name="note"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Note / Remark (Optional)</FormLabel>
+                                    <FormControl>
+                                        <Textarea placeholder="Reason for change..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
                         <DialogFooter>
                             <Button type="submit">
                                 Save
@@ -615,6 +634,6 @@ function ProductDialog({ open, onOpenChange, onSubmit, defaultValues, title, des
                     </form>
                 </Form>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     )
 }

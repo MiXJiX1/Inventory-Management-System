@@ -54,7 +54,10 @@ export default function AuditLogsPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">
-                                            <span className="font-medium">{log.user?.name || "Unknown"}</span>
+                                            <span className="font-medium">
+                                                {log.user?.name || "Unknown"}
+                                                {log.user?.role && <span className="text-muted-foreground ml-1">({log.user.role.toLowerCase()})</span>}
+                                            </span>
                                             <span className="text-xs text-muted-foreground">{log.user?.email}</span>
                                         </div>
                                     </TableCell>

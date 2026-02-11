@@ -3,17 +3,23 @@ import prisma from "../config/db";
 
 export const getDashboardStats = async (req: Request, res: Response) => {
     try {
+        console.log("DEBUG: getDashboardStats called");
         const totalProducts = await prisma.product.count();
+        console.log("DEBUG: totalProducts", totalProducts);
+
         const totalStockResult = await prisma.product.aggregate({
             _sum: { quantity: true },
         });
         const totalStock = totalStockResult._sum.quantity || 0;
+        console.log("DEBUG: totalStock", totalStock);
 
         // Count Low Stock (quantity <= minStock AND quantity > 0)
+        console.log("DEBUG: calculating lowStockCount");
         const lowStockCountResult: any = await prisma.$queryRaw`
             SELECT COUNT(*)::int as count FROM "Product" WHERE quantity <= "minStock" AND quantity > 0
         `;
         const lowStockCount = lowStockCountResult[0]?.count || 0;
+        console.log("DEBUG: lowStockCount", lowStockCount);
 
         const outOfStockCount = await prisma.product.count({
             where: { quantity: 0 },
@@ -26,6 +32,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         });
 
         // Get Low Stock Products (limit 5)
+        console.log("DEBUG: fetching lowStockIds");
         const lowStockIdsResult: any = await prisma.$queryRaw`
             SELECT id FROM "Product" WHERE quantity <= "minStock" ORDER BY quantity ASC LIMIT 5
         `;
@@ -40,6 +47,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         });
 
         // Financial Stats
+        console.log("DEBUG: fetching financialStats");
         const financialStats: any = await prisma.$queryRaw`
             SELECT 
                 COALESCE(SUM("priceSnapshot" * quantity), 0) as revenue,
@@ -51,6 +59,11 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         const totalRevenue = financialStats[0]?.revenue || 0;
         const totalCost = financialStats[0]?.cost || 0;
         const netProfit = totalRevenue - totalCost;
+        console.log("DEBUG: financialStats done", { totalRevenue, totalCost });
+
+        console.log("DEBUG: fetching salesData");
+        const salesData = await getSalesData();
+        console.log("DEBUG: salesData done");
 
         res.json({
             totalProducts,
@@ -62,7 +75,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             netProfit,
             recentProducts,
             lowStockProducts,
-            salesData: await getSalesData()
+            salesData
         });
     } catch (error) {
         console.error("Dashboard Error:", error);

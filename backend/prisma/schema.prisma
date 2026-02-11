@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  RefreshToken RefreshToken[]
+  AuditLogs AuditLog[]
+}
+
+model Product {
+  id        String   @id @default(uuid())
+  name      String
+  sku       String   @unique
+  category  String?  // Keep for migration, make nullable or separate
+  // Better approach: New field for relation
+  categoryId String?
+  Category   Category? @relation(fields: [categoryId], references: [id])
+  image      String?
+  
+  price     Float
+  costPrice Float    @default(0)
+  quantity  Int
+  minStock  Int      @default(10)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  transactions Transaction[]
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  products  Product[]
+}
+
+model Transaction {
+  id        String   @id @default(uuid())
+  type      TransactionType
+  quantity  Int
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  priceSnapshot Float @default(0)
+  costSnapshot  Float @default(0)
+  createdAt DateTime @default(now())
+}
+
+enum TransactionType {
+  IN
+  OUT
+  ADJUST
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  entity    String
+  entityId  String?
+  details   String?  @db.Text
+  createdAt DateTime @default(now())
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  description String
+  amount      Float
+  date        DateTime @default(now()) // For specific date of expense
+  type        String?  // e.g. "Rent", "Utilities", "Salary"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

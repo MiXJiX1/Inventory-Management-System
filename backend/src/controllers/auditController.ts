@@ -9,7 +9,18 @@ export const getAuditLogs = async (req: Request, res: Response) => {
         const action = (req.query.action as string) || "";
         const userId = (req.query.userId as string) || "";
 
+        const search = (req.query.search as string) || "";
+
         const where: any = {};
+
+        if (search) {
+            where.OR = [
+                { details: { contains: search, mode: "insensitive" } },
+                { entityId: { contains: search, mode: "insensitive" } },
+                { action: { contains: search, mode: "insensitive" } },
+                { user: { name: { contains: search, mode: "insensitive" } } }
+            ];
+        }
 
         if (action) {
             where.action = action;

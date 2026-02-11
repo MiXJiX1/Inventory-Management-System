@@ -55,7 +55,7 @@ async function fetchStats({ queryKey }: any) {
 }
 
 export default function ProfitLossPage() {
-    const [dateFilter, setDateFilter] = useState("TODAY")
+    const [dateFilter, setDateFilter] = useState("MONTH")
     const [customStart, setCustomStart] = useState("")
     const [customEnd, setCustomEnd] = useState("")
     const [categoryFilter, setCategoryFilter] = useState("ALL")

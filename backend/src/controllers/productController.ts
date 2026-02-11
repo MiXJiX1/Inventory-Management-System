@@ -167,10 +167,17 @@ export const updateProduct = async (req: Request, res: Response) => {
             if (existing) return res.status(400).json({ message: "SKU already exists" });
         }
 
+        // Variable to hold product name for logging
+        let productName = "";
+
+        let currentProduct: any = null; // Lifted scope for audit log
+
         // Transaction Logic
         const result = await prisma.$transaction(async (prisma) => {
-            const currentProduct = await prisma.product.findUnique({ where: { id: id as string } });
+            currentProduct = await prisma.product.findUnique({ where: { id: id as string } });
             if (!currentProduct) throw new Error("Product not found");
+
+            productName = currentProduct.name;
 
             let transactionType: "IN" | "OUT" | "ADJUST" | null = null;
             let transactionQty = 0;
@@ -209,7 +216,28 @@ export const updateProduct = async (req: Request, res: Response) => {
             return updatedProduct;
         });
 
-        await logAction((req as any).user?.userId, "UPDATE", "PRODUCT", id as string, { updates: data });
+        // Calculate actual changes
+        const changes: Record<string, { old: any, new: any }> = {};
+        if (currentProduct) {
+            const keys = Object.keys(data) as Array<keyof typeof data>;
+            keys.forEach(key => {
+                const newValue = data[key];
+                const oldValue = currentProduct[key as keyof typeof currentProduct];
+
+                // Simple equality check (strict)
+                // Handle standard types. For objects/dates, might need better check, 
+                // but Product model is mostly primitives.
+                if (newValue !== undefined && newValue !== oldValue) {
+                    changes[key] = { old: oldValue, new: newValue };
+                }
+            });
+        }
+
+        await logAction((req as any).user?.userId, "UPDATE", "PRODUCT", id as string, {
+            productName: productName,
+            updates: changes, // Now contains { old, new } objects
+            note: req.body.note
+        });
 
         res.json(result);
     } catch (error: any) {

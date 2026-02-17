@@ -40,12 +40,16 @@ import expenseRoutes from "./routes/expenseRoutes";
 app.use("/expenses", expenseRoutes);
 
 
-app.listen(port, async () => {
-    console.log(`[server]: Server is running at http://localhost:${port}`);
-    try {
-        await prisma.$connect();
-        console.log("[server]: Database connected successfully");
-    } catch (error) {
-        console.error("[server]: Database connection failed", error);
-    }
-});
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    app.listen(port, async () => {
+        console.log(`[server]: Server is running at http://localhost:${port}`);
+        try {
+            await prisma.$connect();
+            console.log("[server]: Database connected successfully");
+        } catch (error) {
+            console.error("[server]: Database connection failed", error);
+        }
+    });
+}
+
+export default app;

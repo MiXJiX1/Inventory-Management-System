@@ -434,10 +434,10 @@ function ProductDialog({ open, onOpenChange, onSubmit, defaultValues, title, des
             name: defaultValues?.name || "",
             sku: defaultValues?.sku || "",
             categoryId: defaultValues?.categoryId || "",
-            price: defaultValues?.price || 0,
-            costPrice: defaultValues?.costPrice || 0,
-            quantity: defaultValues?.quantity || 0,
-            minStock: defaultValues?.minStock || 10,
+            price: Number(defaultValues?.price) || 0,
+            costPrice: Number(defaultValues?.costPrice) || 0,
+            quantity: Number(defaultValues?.quantity) || 0,
+            minStock: Number(defaultValues?.minStock) || 10,
             note: ""
         },
     })

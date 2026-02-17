@@ -429,7 +429,7 @@ interface ProductDialogProps {
 
 function ProductDialog({ open, onOpenChange, onSubmit, defaultValues, title, description, categories }: ProductDialogProps) {
     const form = useForm<ProductFormData>({
-        resolver: zodResolver(productSchema),
+        resolver: zodResolver(productSchema) as any,
         defaultValues: {
             name: defaultValues?.name || "",
             sku: defaultValues?.sku || "",

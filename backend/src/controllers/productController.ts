@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import prisma from "../config/db";
 import { z } from "zod";
 import { logAction } from "../services/auditService";
+import { sendLineNotification } from "../services/lineNotifyService";
 
 const productSchema = z.object({
     name: z.string().min(1),
@@ -160,18 +161,19 @@ export const updateProduct = async (req: Request, res: Response) => {
             if (existing) return res.status(400).json({ message: "SKU already exists" });
         }
 
-        let productName = "";
 
-        let currentProduct: any = null;
+
+        const currentProduct = await prisma.product.findUnique({ where: { id: id as string } });
+        if (!currentProduct) return res.status(404).json({ message: "Product not found" });
+
+
+        let productName = "";
+        let transactionType: "IN" | "OUT" | "ADJUST" | null = null;
+        let transactionQty = 0;
 
         const result = await prisma.$transaction(async (prisma) => {
-            currentProduct = await prisma.product.findUnique({ where: { id: id as string } });
-            if (!currentProduct) throw new Error("Product not found");
-
             productName = currentProduct.name;
 
-            let transactionType: "IN" | "OUT" | "ADJUST" | null = null;
-            let transactionQty = 0;
 
             if (data.quantity !== undefined && data.quantity !== currentProduct.quantity) {
                 const diff = data.quantity - currentProduct.quantity;
@@ -206,6 +208,13 @@ export const updateProduct = async (req: Request, res: Response) => {
 
             return updatedProduct;
         });
+
+        // Check for Low Stock after update
+        if (result.quantity <= (result.minStock || 0)) {
+            const message = `\n⚠️ Low Stock Alert!\nProduct: ${result.name}\nSKU: ${result.sku}\nRemaining: ${result.quantity}`;
+            // Intentionally not awaiting to avoid blocking the response
+            sendLineNotification(message).catch(err => console.error("Failed to send Line Notify:", err));
+        }
 
         const changes: Record<string, { old: any, new: any }> = {};
         if (currentProduct) {

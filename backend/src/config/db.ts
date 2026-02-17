@@ -8,7 +8,9 @@ const connectionString = `${process.env.DATABASE_URL}`;
 if (!process.env.DATABASE_URL) {
     console.error("❌ DATABASE_URL is undefined in environment variables!");
 } else {
-    console.log("✅ DATABASE_URL is defined (starts with: " + process.env.DATABASE_URL.substring(0, 10) + "...)");
+    // Mask password in connection string for safe logging
+    const maskedUrl = process.env.DATABASE_URL.replace(/:([^:@]+)@/, ":*****@");
+    console.log("✅ DATABASE_URL is defined: " + maskedUrl);
 }
 
 const pool = new Pool({

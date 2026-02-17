@@ -380,7 +380,7 @@ async function getSalesData() {
         salesMap.set(dateStr, 0);
     }
 
-    transactions.forEach(t => {
+    transactions.forEach((t: any) => {
         const dateStr = t.createdAt.toISOString().split('T')[0];
         if (salesMap.has(dateStr)) {
             salesMap.set(dateStr, (salesMap.get(dateStr) || 0) + t.quantity);

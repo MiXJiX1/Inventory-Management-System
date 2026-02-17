@@ -171,7 +171,7 @@ export const updateProduct = async (req: Request, res: Response) => {
         let transactionType: "IN" | "OUT" | "ADJUST" | null = null;
         let transactionQty = 0;
 
-        const result = await prisma.$transaction(async (prisma) => {
+        const result = await prisma.$transaction(async (prisma: any) => {
             productName = currentProduct.name;
 
 

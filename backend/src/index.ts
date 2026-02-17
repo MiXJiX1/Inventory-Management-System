@@ -35,24 +35,29 @@ app.get("/", (req: Request, res: Response) => {
     res.send("Inventory Management System API");
 });
 
+
+// Create a main router to handle both / and /api prefixes
+const mainRouter = express.Router();
+
 import authRoutes from "./routes/authRoutes";
 import productRoutes from "./routes/productRoutes";
 import categoryRoutes from "./routes/categoryRoutes";
 import dashboardRoutes from "./routes/dashboardRoutes";
-
 import auditRoutes from "./routes/auditRoutes";
-
-app.use("/auth", authRoutes);
-app.use("/products", productRoutes);
-app.use("/categories", categoryRoutes);
-app.use("/dashboard", dashboardRoutes);
-app.use("/audit-logs", auditRoutes);
-
 import adminRoutes from "./routes/adminRoutes";
-app.use("/admin", adminRoutes);
-
 import expenseRoutes from "./routes/expenseRoutes";
-app.use("/expenses", expenseRoutes);
+
+mainRouter.use("/auth", authRoutes);
+mainRouter.use("/products", productRoutes);
+mainRouter.use("/categories", categoryRoutes);
+mainRouter.use("/dashboard", dashboardRoutes);
+mainRouter.use("/audit-logs", auditRoutes);
+mainRouter.use("/admin", adminRoutes);
+mainRouter.use("/expenses", expenseRoutes);
+
+// Mount the router at both root and /api (for flexibility)
+app.use("/api", mainRouter);
+app.use("/", mainRouter);
 
 
 if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {

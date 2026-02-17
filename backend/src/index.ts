@@ -47,7 +47,9 @@ if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
             await prisma.$connect();
             console.log("[server]: Database connected successfully");
         } catch (error) {
-            console.error("[server]: Database connection failed", error);
+            console.error("[server]: ❌ Database connection failed during startup:", error);
+            // Optional: exit process if DB is critical
+            // process.exit(1);
         }
     });
 }

@@ -12,8 +12,6 @@ api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
-
-        // Don't retry refresh requests or already-retried requests
         if (
             originalRequest._retry ||
             originalRequest.url?.includes("/auth/refresh")

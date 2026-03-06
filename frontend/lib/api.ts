@@ -6,16 +6,31 @@ const api = axios.create({
     timeout: 10000,
 });
 
+let isRefreshing = false;
+
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
-        if (error.response.status === 401 && !originalRequest._retry) {
+
+        // Don't retry refresh requests or already-retried requests
+        if (
+            originalRequest._retry ||
+            originalRequest.url?.includes("/auth/refresh")
+        ) {
+            return Promise.reject(error);
+        }
+
+        if (error.response?.status === 401) {
             originalRequest._retry = true;
+            if (isRefreshing) return Promise.reject(error);
+            isRefreshing = true;
             try {
                 await api.post("/auth/refresh");
+                isRefreshing = false;
                 return api(originalRequest);
             } catch (refreshError) {
+                isRefreshing = false;
                 return Promise.reject(refreshError);
             }
         }

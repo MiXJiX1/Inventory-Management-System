@@ -5,6 +5,7 @@ import api from "@/lib/api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Package, AlertTriangle, CheckCircle } from "lucide-react"
 import { Overview } from "@/components/overview"
+import { useAuth } from "@/components/providers/AuthProvider"
 
 async function fetchStats() {
     const { data } = await api.get("/dashboard/summary")
@@ -12,14 +13,17 @@ async function fetchStats() {
 }
 
 export default function DashboardPage() {
+    const { user, isLoading: authLoading } = useAuth()
     const { data: stats, isLoading, error } = useQuery({
         queryKey: ["dashboardStats"],
         queryFn: fetchStats,
         retry: false,
+        enabled: !!user,  // Only fetch when user is authenticated
     })
 
-    if (isLoading) return <div>Loading dashboard...</div>
+    if (authLoading || isLoading) return <div>Loading dashboard...</div>
     if (error) return <div>Error loading dashboard data.</div>
+
 
     return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

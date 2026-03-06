@@ -18,7 +18,9 @@ export default function DashboardPage() {
         queryKey: ["dashboardStats"],
         queryFn: fetchStats,
         retry: false,
-        enabled: !!user,  // Only fetch when user is authenticated
+        enabled: !!user,
+        staleTime: 60 * 1000,       // Consider data fresh for 60 seconds
+        gcTime: 5 * 60 * 1000,      // Keep in cache for 5 minutes
     })
 
     if (authLoading || isLoading) return <div>Loading dashboard...</div>

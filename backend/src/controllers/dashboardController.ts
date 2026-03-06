@@ -3,60 +3,46 @@ import prisma from "../config/db";
 
 export const getDashboardStats = async (req: Request, res: Response) => {
     try {
-        const totalProducts = await prisma.product.count();
+        // Run all independent queries in parallel
+        const [
+            totalProducts,
+            totalStockResult,
+            lowStockCountResult,
+            outOfStockCount,
+            recentProducts,
+            lowStockIdsResult,
+            financialStats,
+            salesData,
+        ] = await Promise.all([
+            prisma.product.count(),
+            prisma.product.aggregate({ _sum: { quantity: true } }),
+            prisma.$queryRaw<any[]>`SELECT COUNT(*)::int as count FROM "Product" WHERE quantity <= "minStock" AND quantity > 0`,
+            prisma.product.count({ where: { quantity: 0 } }),
+            prisma.product.findMany({ orderBy: { createdAt: "desc" }, take: 5, include: { Category: true } }),
+            prisma.$queryRaw<any[]>`SELECT id FROM "Product" WHERE quantity <= "minStock" ORDER BY quantity ASC LIMIT 5`,
+            prisma.$queryRaw<any[]>`
+                SELECT 
+                    COALESCE(SUM("priceSnapshot" * quantity), 0) as revenue,
+                    COALESCE(SUM("costSnapshot" * quantity), 0) as cost
+                FROM "Transaction"
+                WHERE type = 'OUT'
+            `,
+            getSalesData(),
+        ]);
 
-        const totalStockResult = await prisma.product.aggregate({
-            _sum: { quantity: true },
-        });
         const totalStock = totalStockResult._sum.quantity || 0;
-
-        const lowStockCountResult: any = await prisma.$queryRaw`
-            SELECT COUNT(*)::int as count FROM "Product" WHERE quantity <= "minStock" AND quantity > 0
-        `;
         const lowStockCount = lowStockCountResult[0]?.count || 0;
-
-        const outOfStockCount = await prisma.product.count({
-            where: { quantity: 0 },
-        });
-
-        const recentProducts = await prisma.product.findMany({
-            orderBy: { createdAt: "desc" },
-            take: 5,
-            include: { Category: true }
-        });
-
-
-
-        const lowStockIdsResult: any = await prisma.$queryRaw`
-            SELECT id FROM "Product" WHERE quantity <= "minStock" ORDER BY quantity ASC LIMIT 5
-        `;
         const lowStockIds = lowStockIdsResult.map((p: any) => p.id);
-
-        const lowStockProducts = await prisma.product.findMany({
-            where: {
-                id: { in: lowStockIds }
-            },
-            include: { Category: true },
-            orderBy: { quantity: 'asc' }
-        });
-
-
-        const financialStats: any = await prisma.$queryRaw`
-            SELECT 
-                COALESCE(SUM("priceSnapshot" * quantity), 0) as revenue,
-                COALESCE(SUM("costSnapshot" * quantity), 0) as cost
-            FROM "Transaction"
-            WHERE type = 'OUT'
-        `;
-
         const totalRevenue = financialStats[0]?.revenue || 0;
         const totalCost = financialStats[0]?.cost || 0;
         const netProfit = totalRevenue - totalCost;
-        console.log("DEBUG: financialStats done", { totalRevenue, totalCost });
 
-        console.log("DEBUG: fetching salesData");
-        const salesData = await getSalesData();
-        console.log("DEBUG: salesData done");
+        // lowStockProducts depends on lowStockIds, fetch after
+        const lowStockProducts = await prisma.product.findMany({
+            where: { id: { in: lowStockIds } },
+            include: { Category: true },
+            orderBy: { quantity: 'asc' }
+        });
 
         res.json({
             totalProducts,

@@ -61,6 +61,7 @@ export const login = async (req: Request, res: Response) => {
             secure: process.env.NODE_ENV === "production",
             sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
             maxAge: 10 * 60 * 1000,
+            path: "/",
         });
 
         res.cookie("refreshToken", refreshToken, {
@@ -68,6 +69,7 @@ export const login = async (req: Request, res: Response) => {
             secure: process.env.NODE_ENV === "production",
             sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000,
+            path: "/",
         });
 
         await logAction(user.id, "LOGIN", "USER", user.id);
@@ -87,11 +89,13 @@ export const logout = async (req: Request, res: Response) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        path: "/",
     });
     res.clearCookie("refreshToken", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        path: "/",
     });
     res.json({ message: "Logged out successfully" });
 };
@@ -115,6 +119,7 @@ export const refreshToken = async (req: Request, res: Response) => {
             secure: process.env.NODE_ENV === "production",
             sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
             maxAge: 15 * 60 * 1000,
+            path: "/",
         });
 
         res.json({ message: "Token refreshed" });

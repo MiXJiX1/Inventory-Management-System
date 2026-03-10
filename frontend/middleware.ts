@@ -31,11 +31,14 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    // 3. Auth Routes: If trying to access login/register while already logged in
+    // 3. Auth Routes: Allow accessing login/register even if a cookie is present
+    // This breaks potential infinite refresh loops in production where cookies might be stale.
+    /*
     const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/register');
     if (isAuthRoute && refreshToken) {
         return NextResponse.redirect(new URL('/dashboard', request.url));
     }
+    */
 
     return NextResponse.next();
 }

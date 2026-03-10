@@ -40,6 +40,7 @@ export const config = {
         '/',
         '/login',
         '/register',
+        '/dashboard',
         '/dashboard/:path*',
         '/products/:path*',
         '/categories/:path*',

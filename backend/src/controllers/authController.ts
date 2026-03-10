@@ -58,16 +58,16 @@ export const login = async (req: Request, res: Response) => {
 
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
+            secure: true, // Always true for HTTPS production
+            sameSite: "none", // More robust for cross-site proxies
             maxAge: 10 * 60 * 1000,
             path: "/",
         });
 
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
+            secure: true,
+            sameSite: "none",
             maxAge: 7 * 24 * 60 * 60 * 1000,
             path: "/",
         });
@@ -87,14 +87,14 @@ export const logout = async (req: Request, res: Response) => {
     }
     res.clearCookie("accessToken", {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        secure: true,
+        sameSite: "none",
         path: "/",
     });
     res.clearCookie("refreshToken", {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        secure: true,
+        sameSite: "none",
         path: "/",
     });
     res.json({ message: "Logged out successfully" });
@@ -108,7 +108,10 @@ export const refreshToken = async (req: Request, res: Response) => {
         const payload = verifyRefreshToken(token);
         const storedToken = await prisma.refreshToken.findUnique({ where: { token } });
 
-        if (!storedToken) return res.status(403).json({ message: "Invalid refresh token" });
+        if (!storedToken) {
+            console.warn(`[Auth] Refresh token not found in database for token preview: ${token.substring(0, 10)}...`);
+            return res.status(403).json({ message: "Invalid refresh token" });
+        }
 
         const user = await prisma.user.findUnique({ where: { id: payload.userId } });
         if (!user) return res.status(403).json({ message: "User not found" });
@@ -116,14 +119,15 @@ export const refreshToken = async (req: Request, res: Response) => {
         const newAccessToken = generateAccessToken(user.id, user.role);
         res.cookie("accessToken", newAccessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
+            secure: true,
+            sameSite: "none",
             maxAge: 15 * 60 * 1000,
             path: "/",
         });
 
         res.json({ message: "Token refreshed" });
     } catch (error) {
+        console.error(`[Auth] Refresh token verification failed:`, error);
         res.status(403).json({ message: "Invalid or expired refresh token" });
     }
 };

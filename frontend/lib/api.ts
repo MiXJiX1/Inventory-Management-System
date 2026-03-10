@@ -20,6 +20,7 @@ api.interceptors.response.use(
         }
 
         if (error.response?.status === 401) {
+            if (originalRequest._retry) return Promise.reject(error);
             originalRequest._retry = true;
             if (isRefreshing) return Promise.reject(error);
             isRefreshing = true;
@@ -29,6 +30,10 @@ api.interceptors.response.use(
                 return api(originalRequest);
             } catch (refreshError) {
                 isRefreshing = false;
+                // If refresh fails, clear the user and go to login
+                if (typeof window !== "undefined") {
+                    window.location.href = "/login";
+                }
                 return Promise.reject(refreshError);
             }
         }

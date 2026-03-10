@@ -43,7 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const login = async (data: any) => {
         const res = await authService.login(data);
         setUser(res.data.user);
-        router.push("/dashboard");
+        // Use hard redirect to ensure cookies are correctly picked up by middleware on Vercel
+        window.location.href = "/dashboard";
     };
 
     const logout = async () => {

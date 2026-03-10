@@ -26,8 +26,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter();
 
     useEffect(() => {
-        checkUser();
-    }, []);
+        const isAuthPage = window.location.pathname === "/login" || window.location.pathname === "/register";
+        if (!isAuthPage) {
+            checkUser();
+        } else {
+            setIsLoading(false);
+        }
+    }, [router]);
 
     const checkUser = async () => {
         try {

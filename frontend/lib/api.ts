@@ -40,7 +40,11 @@ api.interceptors.response.use(
                 }
 
                 if (typeof window !== "undefined") {
-                    window.location.href = "/login";
+                    // Only redirect if we are not already at the login/register page
+                    const isAuthPage = window.location.pathname === "/login" || window.location.pathname === "/register";
+                    if (!isAuthPage) {
+                        window.location.href = "/login";
+                    }
                 }
                 return Promise.reject(refreshError);
             }

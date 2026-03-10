@@ -5,8 +5,11 @@ export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const refreshToken = request.cookies.get('refreshToken')?.value;
 
-    // DEBUG: Only for troubleshooting production redirection
-    console.log(`[Middleware] Path: ${pathname}, Token found: ${!!refreshToken}`);
+    // DEBUG: Comprehensive logs for production troubleshooting
+    console.log(`[Middleware Check] Path: ${pathname}`);
+    console.log(`[Middleware Check] Raw Cookies: ${request.headers.get('cookie')}`);
+    console.log(`[Middleware Check] refreshToken found: ${!!refreshToken}`);
+    if (refreshToken) console.log(`[Middleware Check] Token preview: ${refreshToken.substring(0, 10)}...`);
 
     // 1. If trying to access the root path '/'
     if (pathname === '/') {

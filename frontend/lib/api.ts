@@ -14,7 +14,9 @@ api.interceptors.response.use(
         const originalRequest = error.config;
         if (
             originalRequest._retry ||
-            originalRequest.url?.includes("/auth/refresh")
+            originalRequest.url?.includes("/auth/refresh") ||
+            originalRequest.url?.includes("/auth/login") ||
+            originalRequest.url?.includes("/auth/register")
         ) {
             return Promise.reject(error);
         }
